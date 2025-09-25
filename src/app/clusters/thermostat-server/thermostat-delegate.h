@@ -240,6 +240,22 @@ public:
      */
     virtual CHIP_ERROR GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType) = 0;
 
+    /**
+     * @brief Get the NumberOfSchedules attribute value.
+     *
+     * @return The max number of schedules supported. Return 0 if not set.
+     */
+    virtual uint8_t GetMaxAllowedNumberOfSchedules() = 0;
+
+    /**
+     * @brief Get the schedule at a given index in the Schedule attribute
+     *
+     * @param[in] index The index of the schedule in the list.
+     * @param[out] scheduleType The schedule at the given index in the list.
+     * @return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED if the index is out of range for the schedule list.
+     */
+    virtual CHIP_ERROR GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & scheduleType) = 0;
+
 
 
 

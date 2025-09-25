@@ -501,3 +501,20 @@ CHIP_ERROR ThermostatDelegate::GetScheduleTypeAtIndex(size_t index, Structs::Sch
     }
     return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
 }
+
+uint8_t ThermostatDelegate::GetMaxAllowedNumberOfSchedules()
+{
+    return 3;
+}
+
+CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule)
+{
+    static ScheduleStruct::Type schedules[] = { };
+
+    if (index < MATTER_ARRAY_SIZE(schedules))
+    {
+        schedule = schedules[index];
+        return CHIP_NO_ERROR;
+    }
+    return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+}

@@ -94,6 +94,10 @@ public:
 
     CHIP_ERROR GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType) override;
 
+    uint8_t GetMaxAllowedNumberOfSchedules() override;
+
+    CHIP_ERROR GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & scheduleType) override;
+
 private:
     static ThermostatDelegate sInstance;
 
