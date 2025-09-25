@@ -92,6 +92,8 @@ public:
 
     CHIP_ERROR ReEvaluateCurrentSuggestion() override;
 
+    CHIP_ERROR GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType) override;
+
 private:
     static ThermostatDelegate sInstance;
 

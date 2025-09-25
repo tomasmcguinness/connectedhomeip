@@ -483,3 +483,16 @@ size_t ThermostatDelegate::GetThermostatSuggestionIndexWithEarliestEffectiveTime
     }
     return minEffectiveTimeSuggestionIndex;
 }
+
+CHIP_ERROR ThermostatDelegate::GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType)
+{
+    static ScheduleTypeStruct::Type scheduleTypes[] = {
+        { .systemMode     = SystemModeEnum::kHeat },
+    };
+    if (index < MATTER_ARRAY_SIZE(scheduleTypes))
+    {
+        scheduleType = scheduleTypes[index];
+        return CHIP_NO_ERROR;
+    }
+    return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+}
