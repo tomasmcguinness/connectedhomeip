@@ -487,7 +487,12 @@ size_t ThermostatDelegate::GetThermostatSuggestionIndexWithEarliestEffectiveTime
 CHIP_ERROR ThermostatDelegate::GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType)
 {
     static ScheduleTypeStruct::Type scheduleTypes[] = {
-        { .systemMode     = SystemModeEnum::kHeat },
+        { .systemMode           = SystemModeEnum::kHeat,
+          .numberOfSchedules    = 1,
+          .scheduleTypeFeatures = to_underlying(ScheduleTypeFeaturesBitmap::kSupportsSetpoints) },
+        { .systemMode           = SystemModeEnum::kCool,
+          .numberOfSchedules    = 1,
+          .scheduleTypeFeatures = to_underlying(ScheduleTypeFeaturesBitmap::kSupportsSetpoints) },
     };
     if (index < MATTER_ARRAY_SIZE(scheduleTypes))
     {

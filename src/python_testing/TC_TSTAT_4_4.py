@@ -57,7 +57,7 @@ class TC_TSTAT_4_4(MatterBaseTest):
 
     def pics_TC_TSTAT_4_4(self):
         """ This function returns a list of PICS for this test case that must be True for the test to be run"""
-        return ["TSTAT.S", "TSTAT.S.F0a"]
+        return ["TSTAT.S", "TSTAT.S.F07"]
 
     def steps_TC_TSTAT_4_4(self) -> list[TestStep]:
         steps = [
@@ -73,17 +73,19 @@ class TC_TSTAT_4_4(MatterBaseTest):
     async def test_TC_TSTAT_4_4(self):
         endpoint = self.get_endpoint()
 
+        logger.info(f"Endpoint: {endpoint}")
+
         self.step("1")
         # Commission DUT - already done
 
         self.step("2")
-        if self.pics_guard(self.check_pics("TSTAT.S.F0a")):
+        #if self.pics_guard(self.check_pics("TSTAT.S.F0a")):
             # TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.
-            supported_schedule_types = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
-            logger.info(f"Supported Schedule Types: {supported_schedule_types}")
+        supported_schedule_types = await self.read_single_attribute_check_success(endpoint=1, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
+        logger.info(f"Supported Schedule Types: {supported_schedule_types}")
 
-            # Verify that the read returned a list of schedule types with count >=2.
-            asserts.assert_greater_equal(len(supported_schedule_types), 2)
+        # Verify that the read returned a list of schedule types with count >=2.
+        asserts.assert_greater_equal(len(supported_schedule_types), 2)
 
 if __name__ == "__main__":
     default_matter_test_main()
