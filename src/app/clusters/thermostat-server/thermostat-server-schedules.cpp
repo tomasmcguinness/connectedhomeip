@@ -39,6 +39,12 @@ CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * de
 
     ScheduleStruct::Type schedule;
 
+    // For now, just create a schedule.
+    //
+    schedule.scheduleHandle = newSchedule.scheduleHandle;
+    schedule.systemMode     = newSchedule.systemMode;
+    schedule.builtIn        = newSchedule.builtIn;
+
     // if (newSchedule.scheduleHandle.IsNull())
     // {
     //     if (IsBuiltIn(newSchedule))
@@ -164,7 +170,6 @@ CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * de
     //     return CHIP_IM_GLOBAL_STATUS(ResourceExhausted);
     // }
 
-    //schedule.builtIn    = newSchedule.builtIn;
 
     return delegate->AppendToPendingScheduleList(schedule);
 
