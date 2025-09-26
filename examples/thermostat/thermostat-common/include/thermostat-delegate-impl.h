@@ -110,6 +110,8 @@ public:
 
     CHIP_ERROR AppendToPendingScheduleList(const Structs::ScheduleStruct::Type & schedule) override;
 
+    CHIP_ERROR GetPendingScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule) override;
+
 private:
     static ThermostatDelegate sInstance;
 

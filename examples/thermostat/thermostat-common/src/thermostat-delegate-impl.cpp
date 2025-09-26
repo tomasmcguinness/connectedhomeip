@@ -580,3 +580,13 @@ CHIP_ERROR ThermostatDelegate::AppendToPendingScheduleList(const Structs::Schedu
     }
     return CHIP_ERROR_WRITE_FAILED;
 }
+
+CHIP_ERROR ThermostatDelegate::GetPendingScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule)
+{
+    if (index < mNextFreeIndexInPendingSchedulesList)
+    {
+        schedule = mPendingSchedules[index];
+        return CHIP_NO_ERROR;
+    }
+    return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+}

@@ -243,7 +243,7 @@ public:
 
     virtual CHIP_ERROR AppendToPendingScheduleList(const Structs::ScheduleStruct::Type & schedule) = 0;
 
-
+    virtual CHIP_ERROR GetPendingScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule) = 0;
 
 
 

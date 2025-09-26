@@ -668,7 +668,7 @@ CHIP_ERROR ThermostatAttrAccess::Read(const ConcreteReadAttributePath & aPath, A
                 for (uint8_t i = 0; true; i++)
                 {
                     ScheduleStruct::Type schedule;
-                    auto err = delegate->GetScheduleAtIndex(i, schedule);
+                    auto err = delegate->GetPendingScheduleAtIndex(i, schedule);
                     if (err == CHIP_ERROR_PROVIDER_LIST_EXHAUSTED)
                     {
                         return CHIP_NO_ERROR;
@@ -803,7 +803,7 @@ CHIP_ERROR ThermostatAttrAccess::Write(const ConcreteDataAttributePath & aPath, 
         auto delegate = GetDelegate(endpoint);
         VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INCORRECT_STATE, ChipLogError(Zcl, "Delegate is null"));
 
-        // Schedules are not editable, return INVALID_IN_STATE.
+        // Presets are not editable, return INVALID_IN_STATE.
         VerifyOrReturnError(InAtomicWrite(endpoint, MakeOptional(aPath.mAttributeId)), CHIP_IM_GLOBAL_STATUS(InvalidInState),
                             ChipLogError(Zcl, "Schedules are not editable"));
 

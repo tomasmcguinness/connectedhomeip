@@ -212,16 +212,16 @@ class TC_TSTAT_4_4(MatterBaseTest):
         # for schedule in test_schedules:
         #     schedule.builtIn = NullValue
 
-        #test_schedules.append(self.make_schedule(Clusters.Objects.Thermostat.Enums.SystemModeEnum.kHeat))
+        test_schedules.append(self.make_schedule(Clusters.Objects.Thermostat.Enums.SystemModeEnum.kHeat))
 
         await self.send_atomic_request_begin_command()
 
         logger.info(f"Successfully sent beginWrite atomic request")
 
         # Write to the presets attribute after calling AtomicRequest command
-        status = await self.write_schedules(endpoint=1, schedules=test_schedules)
-        #status_ok = (status == Status.Success)
-        #asserts.assert_true(status_ok, "Schedules write did not return Success as expected")
+        status = await self.write_schedules(endpoint=endpoint, schedules=test_schedules)
+        status_ok = (status == Status.Success)
+        asserts.assert_true(status_ok, "Schedules write did not return Success as expected")
 
         # Read the schedules attribute and verify it was updated by the write
         saved_schedules = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.Schedules)
