@@ -509,7 +509,12 @@ uint8_t ThermostatDelegate::GetMaxAllowedNumberOfSchedules()
 
 CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule)
 {
-    static ScheduleStruct::Type schedules[] = { };
+    static ScheduleStruct::Type schedules[] = {
+        { .scheduleHandle = ByteSpan((const uint8_t *) "\x01", 1),
+          .systemMode     = SystemModeEnum::kHeat,
+          .transitions    = DataModel::List<Structs::ScheduleTransitionStruct::Type>(),
+          .builtIn        = DataModel::MakeNullable(true) },
+    };
 
     if (index < MATTER_ARRAY_SIZE(schedules))
     {
