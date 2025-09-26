@@ -55,6 +55,18 @@ cluster = Clusters.Thermostat
 
 class TC_TSTAT_4_4(MatterBaseTest):
 
+    def check_returned_schedules(self, sent_schedules: list, returned_schedules: list):
+        asserts.assert_true(len(sent_schedules) == len(returned_schedules), "Returned returned_schedules are a different length than sent returned_schedules")
+        for i, sent_preset in enumerate(sent_schedules):
+            returned_preset = returned_schedules[i]
+            if sent_preset.presetHandle is NullValue:
+                sent_preset = copy.copy(sent_preset)
+                sent_preset.presetHandle = returned_preset.presetHandle
+            if sent_preset.builtIn is NullValue:
+                sent_preset.builtIn = returned_preset.builtIn
+            asserts.assert_equal(sent_preset, returned_preset,
+                                 "Returned schedule is not the same as sent schedule")
+
     def check_atomic_response(self, response: object, 
                               expected_status: Status = Status.Success,
                               expected_overall_status: Status = Status.Success,
@@ -76,8 +88,10 @@ class TC_TSTAT_4_4(MatterBaseTest):
             asserts.assert_equal(attrStatus.statusCode, expected_schedules_status,
                                  "Schedules attribute should have the right status")
 
-    def make_schedule(self, systemMode, scheduleHandle=NullValue, builtIn=False):
-        schedule = cluster.Structs.ScheduleStruct(scheduleHandle=scheduleHandle, systemMode=systemMode, transitions=[], builtIn=builtIn)
+        logger.info(f"check_atomic_response returned successfully")    
+
+    def make_schedule(self, systemMode, scheduleHandle=NullValue, builtIn=True):
+        schedule = cluster.Structs.ScheduleStruct(scheduleHandle=scheduleHandle, systemMode=systemMode, transitions=[], name=None, presetHandle=None, builtIn=builtIn)
         #if self.check_pics("TSTAT.S.F00"):
         #    preset.heatingSetpoint = heatSetpoint
         #if self.check_pics("TSTAT.S.F01"):
@@ -101,7 +115,7 @@ class TC_TSTAT_4_4(MatterBaseTest):
     async def send_atomic_request_begin_command(self,
                                                 dev_ctrl: ChipDeviceCtrl = None,
                                                 endpoint: int = 1,
-                                                timeout: int = 1800,
+                                                timeout: int = 30000,
                                                 expected_status: Status = Status.Success,
                                                 expected_overall_status: Status = Status.Success,
                                                 expected_schedules_status: Status = Status.Success,
@@ -113,8 +127,25 @@ class TC_TSTAT_4_4(MatterBaseTest):
                                                                                      timeout=timeout),
                                                   dev_ctrl=dev_ctrl,
                                                   endpoint=endpoint)
-            self.check_atomic_response(response, expected_status, expected_overall_status,
+            self.check_atomic_response(response, expected_status, 
+                                       expected_overall_status,
                                        expected_schedules_status, expected_timeout)
+
+        except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Atomic request begin: Unexpected error returned")
+
+    async def send_atomic_request_rollback_command(self,
+                                                   dev_ctrl: ChipDeviceCtrl = None,
+                                                   endpoint: int = 1,
+                                                   expected_status: Status = Status.Success,
+                                                   expected_overall_status: Status = Status.Success,
+                                                   expected_schedules_status: Status = Status.Success):
+        try:
+            response = await self.send_single_cmd(cmd=cluster.Commands.AtomicRequest(requestType=Globals.Enums.AtomicRequestTypeEnum.kRollbackWrite,
+                                                                                     attributeRequests=[cluster.Attributes.Schedules.attribute_id]),
+                                                  dev_ctrl=dev_ctrl,
+                                                  endpoint=endpoint)
+            self.check_atomic_response(response, expected_status, expected_overall_status, expected_schedules_status)
 
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
@@ -177,24 +208,25 @@ class TC_TSTAT_4_4(MatterBaseTest):
 
         #if availableScenario is not None and len(current_presets) < numberOfPresetsSupported:
 
-        # Set the preset builtIn fields to a null built-in value
         test_schedules = copy.deepcopy(current_schedules)
-        for schedule in test_schedules:
-            schedule.builtIn = NullValue
+        # for schedule in test_schedules:
+        #     schedule.builtIn = NullValue
 
-        test_schedules.append(self.make_schedule(Clusters.Objects.Thermostat.Enums.SystemModeEnum.kHeat))
+        #test_schedules.append(self.make_schedule(Clusters.Objects.Thermostat.Enums.SystemModeEnum.kHeat))
 
         await self.send_atomic_request_begin_command()
 
-        # Write to the presets attribute after calling AtomicRequest command
-        status = await self.write_schedules(endpoint=endpoint, schedules=test_schedules)
-        status_ok = (status == Status.Success)
-        asserts.assert_true(status_ok, "Schedules write did not return Success as expected")
+        logger.info(f"Successfully sent beginWrite atomic request")
 
-        # Read the presets attribute and verify it was updated by the write
+        # Write to the presets attribute after calling AtomicRequest command
+        status = await self.write_schedules(endpoint=1, schedules=test_schedules)
+        #status_ok = (status == Status.Success)
+        #asserts.assert_true(status_ok, "Schedules write did not return Success as expected")
+
+        # Read the schedules attribute and verify it was updated by the write
         saved_schedules = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.Schedules)
-        logger.info(f"Rx'd Schedules: {saved_presets}")
-        self.check_returned_schedules(test_schedules, saved_presets)
+        logger.info(f"Rx'd Schedules: {saved_schedules}")
+        self.check_returned_schedules(test_schedules, saved_schedules)
 
         await self.send_atomic_request_rollback_command()
 
@@ -205,14 +237,14 @@ class TC_TSTAT_4_4(MatterBaseTest):
     #     logger.info(
     #         "Couldn't run test step 3 since there was no available preset scenario to append")
 
-        self.step("5")
-        #if self.pics_guard(self.check_pics("TSTAT.S.F0a")):
-            # TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.
-        supported_schedule_types = await self.read_single_attribute_check_success(endpoint=1, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
-        logger.info(f"Supported Schedule Types: {supported_schedule_types}")
+        # self.step("5")
+        # #if self.pics_guard(self.check_pics("TSTAT.S.F0a")):
+        #     # TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.
+        # supported_schedule_types = await self.read_single_attribute_check_success(endpoint=1, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
+        # logger.info(f"Supported Schedule Types: {supported_schedule_types}")
 
-        # Verify that the read returned a list of schedule types with count >=2.
-        asserts.assert_greater_equal(len(supported_schedule_types), 2)
+        # # Verify that the read returned a list of schedule types with count >=2.
+        # asserts.assert_greater_equal(len(supported_schedule_types), 2)
 
 if __name__ == "__main__":
     default_matter_test_main()

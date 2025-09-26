@@ -180,6 +180,7 @@ private:
     Structs::ScheduleStruct::Type mPendingSchedules[kMaxNumberOfPresetTypes * kMaxNumberOfPresetsOfEachType];
     
     uint8_t mNextFreeIndexInPendingSchedulesList;
+    uint8_t mNextFreeIndexInSchedulesList;
 };
 
 } // namespace Thermostat

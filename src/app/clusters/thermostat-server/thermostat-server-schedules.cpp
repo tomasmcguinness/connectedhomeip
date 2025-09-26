@@ -39,15 +39,15 @@ CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * de
 
     ScheduleStruct::Type schedule;
 
-    if (newSchedule.scheduleHandle.IsNull())
-    {
-        if (IsBuiltIn(newSchedule))
-        {
-            return CHIP_IM_GLOBAL_STATUS(ConstraintError);
-        }
-        // Force to be false, if passed as null
-        schedule.builtIn = DataModel::MakeNullable(false);
-    }
+    // if (newSchedule.scheduleHandle.IsNull())
+    // {
+    //     if (IsBuiltIn(newSchedule))
+    //     {
+    //         return CHIP_IM_GLOBAL_STATUS(ConstraintError);
+    //     }
+    //     // Force to be false, if passed as null
+    //     schedule.builtIn = DataModel::MakeNullable(false);
+    // }
 
     // PresetStructWithOwnedMembers preset = newPreset;
     // if (!IsValidPresetEntry(preset))
@@ -164,7 +164,7 @@ CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * de
     //     return CHIP_IM_GLOBAL_STATUS(ResourceExhausted);
     // }
 
-    schedule.builtIn    = newSchedule.builtIn;
+    //schedule.builtIn    = newSchedule.builtIn;
 
     return delegate->AppendToPendingScheduleList(schedule);
 

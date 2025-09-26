@@ -40,6 +40,9 @@ ThermostatDelegate::ThermostatDelegate()
     mIndexOfCurrentSuggestion                 = mMaxThermostatSuggestions;
     mNextFreeIndexInThermostatSuggestionsList = 0;
 
+    mNextFreeIndexInSchedulesList             = 0;
+    mNextFreeIndexInPendingSchedulesList      = 0;
+
     // Start the unique ID from 0 and it increases montonically.
     mUniqueID = 0;
 
@@ -177,7 +180,7 @@ std::optional<System::Clock::Milliseconds16> ThermostatDelegate::GetMaxAtomicWri
         return std::chrono::milliseconds(3000);
     case Attributes::Schedules::Id:
         // If the client expects to edit the schedules, then we'll give it 9 seconds to do so
-        return std::chrono::milliseconds(9000);
+        return std::chrono::milliseconds(30000);
     default:
         return std::nullopt;
     }
@@ -537,7 +540,7 @@ uint8_t ThermostatDelegate::GetMaxAllowedNumberOfSchedules()
 
 CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule)
 {
-    if (index < MATTER_ARRAY_SIZE(mSchedules))
+    if (index < mNextFreeIndexInSchedulesList)
     {
         schedule = mSchedules[index];
         return CHIP_NO_ERROR;
