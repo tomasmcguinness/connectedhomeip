@@ -484,6 +484,34 @@ size_t ThermostatDelegate::GetThermostatSuggestionIndexWithEarliestEffectiveTime
     return minEffectiveTimeSuggestionIndex;
 }
 
+// void ThermostatDelegate::InitializeSchedules()
+// {
+//     // Initialize the presets with 2 built in presets - occupied and unoccupied.
+//     PresetScenarioEnum presetScenarioEnumArray[2] = { PresetScenarioEnum::kOccupied, PresetScenarioEnum::kUnoccupied };
+//     static_assert(MATTER_ARRAY_SIZE(presetScenarioEnumArray) <= MATTER_ARRAY_SIZE(mPresets));
+
+//     uint8_t index = 0;
+//     for (PresetScenarioEnum presetScenario : presetScenarioEnumArray)
+//     {
+//         mPresets[index].SetPresetScenario(presetScenario);
+
+//         // Set the preset handle to the preset scenario value as a unique id.
+//         const uint8_t handle[] = { static_cast<uint8_t>(presetScenario) };
+//         mPresets[index].SetPresetHandle(DataModel::MakeNullable(ByteSpan(handle)));
+//         mPresets[index].SetName(NullOptional);
+//         int16_t coolingSetpointValue = static_cast<int16_t>(2500 + (index * 100));
+//         mPresets[index].SetCoolingSetpoint(MakeOptional(coolingSetpointValue));
+
+//         int16_t heatingSetpointValue = static_cast<int16_t>(2100 - (index * 100));
+//         mPresets[index].SetHeatingSetpoint(MakeOptional(heatingSetpointValue));
+//         mPresets[index].SetBuiltIn(DataModel::MakeNullable(true));
+//         index++;
+//     }
+
+//     // Set the value of the next free index in the presets list.
+//     mNextFreeIndexInPresetsList = index;
+// }
+
 CHIP_ERROR ThermostatDelegate::GetScheduleTypeAtIndex(size_t index, Structs::ScheduleTypeStruct::Type & scheduleType)
 {
     static ScheduleTypeStruct::Type scheduleTypes[] = {
@@ -509,16 +537,9 @@ uint8_t ThermostatDelegate::GetMaxAllowedNumberOfSchedules()
 
 CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & schedule)
 {
-    static ScheduleStruct::Type schedules[] = {
-        { .scheduleHandle = ByteSpan((const uint8_t *) "\x01", 1),
-          .systemMode     = SystemModeEnum::kHeat,
-          .transitions    = DataModel::List<Structs::ScheduleTransitionStruct::Type>(),
-          .builtIn        = DataModel::MakeNullable(true) },
-    };
-
-    if (index < MATTER_ARRAY_SIZE(schedules))
+    if (index < MATTER_ARRAY_SIZE(mSchedules))
     {
-        schedule = schedules[index];
+        schedule = mSchedules[index];
         return CHIP_NO_ERROR;
     }
     return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
@@ -526,10 +547,33 @@ CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::Schedul
 
 void ThermostatDelegate::ClearPendingScheduleList()
 {
-
+    mNextFreeIndexInPendingSchedulesList = 0;
 }
 
 CHIP_ERROR ThermostatDelegate::CommitPendingSchedules()
 {
+    mNextFreeIndexInPendingSchedulesList = 0;
+    for (uint8_t indexInPendingSchedules = 0; indexInPendingSchedules < mNextFreeIndexInPendingSchedulesList; indexInPendingSchedules++)
+    {
+        const Structs::ScheduleStruct::Type & pendingSchedule = mPendingSchedules[indexInPendingSchedules];
+        mSchedules[mNextFreeIndexInPendingSchedulesList]              = pendingSchedule;
+        mNextFreeIndexInPendingSchedulesList++;
+    }
     return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR ThermostatDelegate::AppendToPendingScheduleList(const Structs::ScheduleStruct::Type & schedule)
+{
+    if (mNextFreeIndexInPendingSchedulesList < MATTER_ARRAY_SIZE(mPendingSchedules))
+    {
+        mPendingSchedules[mNextFreeIndexInPendingSchedulesList] = schedule;
+        if (schedule.scheduleHandle.IsNull())
+        {
+            const uint8_t handle[] = "\x01";
+            mPendingSchedules[mNextFreeIndexInPendingSchedulesList].scheduleHandle = DataModel::MakeNullable(ByteSpan(handle));
+        }
+        mNextFreeIndexInPendingSchedulesList++;
+        return CHIP_NO_ERROR;
+    }
+    return CHIP_ERROR_WRITE_FAILED;
 }

@@ -37,13 +37,19 @@ static constexpr uint8_t kMaxNumberOfPresetTypes = 6;
 
 static constexpr uint8_t kMaxNumberOfThermostatSuggestions = 5;
 
+static constexpr uint8_t kMaxNumberOfSchedulesTypes = 3;
+
 // TODO: #34556 Support multiple presets of each type.
 // We will support only one preset of each preset type.
 static constexpr uint8_t kMaxNumberOfPresetsOfEachType = 1;
 
+static constexpr uint8_t kMaxNumberOfSchedulesOfEachType = 1;
+
 // For testing the use case where number of presets added exceeds the number of presets supported, we will have the value of
 // kMaxNumberOfPresetsSupported < kMaxNumberOfPresetTypes * kMaxNumberOfPresetsOfEachType
 static constexpr uint8_t kMaxNumberOfPresetsSupported = kMaxNumberOfPresetTypes * kMaxNumberOfPresetsOfEachType - 1;
+
+static constexpr uint8_t kMaxNumberOfSchedulesSupported = kMaxNumberOfSchedulesTypes * kMaxNumberOfSchedulesOfEachType - 1;
 
 class ThermostatDelegate : public Delegate
 {
@@ -101,6 +107,8 @@ public:
     void ClearPendingScheduleList() override;
 
     CHIP_ERROR CommitPendingSchedules() override;
+
+    CHIP_ERROR AppendToPendingScheduleList(const Structs::ScheduleStruct::Type & schedule) override;
 
 private:
     static ThermostatDelegate sInstance;
@@ -164,6 +172,14 @@ private:
     DataModel::Nullable<ThermostatSuggestionNotFollowingReasonBitmap> mThermostatSuggestionNotFollowingReason;
 
     bool mIsExpirationTimerRunning = false;
+
+    uint8_t mMaxNumberSchedules;
+
+    Structs::ScheduleTypeStruct::Type mScheduleTypes[kMaxNumberOfSchedulesTypes];
+    Structs::ScheduleStruct::Type mSchedules[kMaxNumberOfPresetTypes * kMaxNumberOfPresetsOfEachType];
+    Structs::ScheduleStruct::Type mPendingSchedules[kMaxNumberOfPresetTypes * kMaxNumberOfPresetsOfEachType];
+    
+    uint8_t mNextFreeIndexInPendingSchedulesList;
 };
 
 } // namespace Thermostat

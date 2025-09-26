@@ -37,13 +37,14 @@ namespace Thermostat {
 extern ThermostatAttrAccess gThermostatAttrAccess;
 
 /**
- * @brief Callback that is called when the timeout for editing the presets expires.
+ * @brief Callback that is called when the timeout for editing the presets or schedules expires.
  *
  * @param[in] systemLayer The system layer.
  * @param[in] callbackContext The context passed to the timer callback.
  */
 void TimerExpiredCallback(System::Layer * systemLayer, void * callbackContext)
 {
+    ChipLogError(Zcl, "TimerExpiredCallback() - AtomicWrite has expired");
     EndpointId endpoint = static_cast<EndpointId>(reinterpret_cast<uintptr_t>(callbackContext));
     gThermostatAttrAccess.ResetAtomicWrite(endpoint);
 }
@@ -188,9 +189,12 @@ Status BuildAttributeStatuses(const EndpointId endpoint, const DataModel::Decoda
         const EmberAfAttributeMetadata * metadata =
             emberAfLocateAttributeMetadata(endpoint, Thermostat::Id, attributeStatus.attributeID);
 
+        ChipLogError(Zcl, "Attribute: 0x%04" PRIX32, attributeStatus.attributeID);
+
         if (metadata != nullptr)
         {
             // This is definitely an attribute we know about.
+            ChipLogError(Zcl, "We know about attribute: 0x%04" PRIX32, attributeStatus.attributeID);
             continue;
         }
 
@@ -198,6 +202,8 @@ Status BuildAttributeStatuses(const EndpointId endpoint, const DataModel::Decoda
         {
             continue;
         }
+
+        ChipLogError(Zcl, "This is not a valid attribute on the Thermostat cluster on the supplied endpoint");
 
         // This is not a valid attribute on the Thermostat cluster on the supplied endpoint
         return Status::InvalidCommand;
@@ -408,6 +414,7 @@ void ThermostatAttrAccess::BeginAtomicWrite(CommandHandler * commandObj, const C
 
     if (!commandData.timeout.HasValue())
     {
+        ChipLogError(Zcl, "NO TIMEOUT");
         commandObj->AddStatus(commandPath, Status::InvalidCommand);
         return;
     }
@@ -485,6 +492,8 @@ void ThermostatAttrAccess::BeginAtomicWrite(CommandHandler * commandObj, const C
 void ThermostatAttrAccess::CommitAtomicWrite(CommandHandler * commandObj, const ConcreteCommandPath & commandPath,
                                              const Commands::AtomicRequest::DecodableType & commandData)
 {
+    ChipLogError(Zcl, "CommitAtomicWrite()");
+
     EndpointId endpoint = commandPath.mEndpointId;
     auto delegate       = GetDelegate(endpoint);
 
@@ -503,11 +512,15 @@ void ThermostatAttrAccess::CommitAtomicWrite(CommandHandler * commandObj, const 
         return;
     }
 
+    ChipLogError(Zcl, "GotAttributeStatuses()");
+
     if (!InAtomicWrite(endpoint, commandObj, attributeStatuses))
     {
         commandObj->AddStatus(commandPath, Status::InvalidInState);
         return;
     }
+
+    ChipLogError(Zcl, "Passed InAtomicWriteCheck()");
 
     status = Status::Success;
     for (size_t i = 0; i < attributeStatuses.AllocatedSize(); ++i)
@@ -520,6 +533,7 @@ void ThermostatAttrAccess::CommitAtomicWrite(CommandHandler * commandObj, const 
             statusCode = PrecommitPresets(endpoint);
             break;
         case Schedules::Id:
+            ChipLogError(Zcl, "Calling PrecommitSchedules");
             statusCode = PrecommitSchedules(endpoint);
             break;
         default:

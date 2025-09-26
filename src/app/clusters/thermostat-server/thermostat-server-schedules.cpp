@@ -28,8 +28,27 @@ using namespace chip::app::Clusters::Thermostat::Structs;
 using namespace chip::app::Clusters::Globals::Structs;
 using namespace chip::Protocols::InteractionModel;
 
+bool IsBuiltIn(const Structs::ScheduleStruct::DecodableType & schedule)
+{
+    return schedule.builtIn.ValueOr(false);
+}
+
 CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * delegate, const ScheduleStruct::DecodableType & newSchedule)
 {
+    ChipLogError(Zcl, "AppendPendingSchedule()");
+
+    ScheduleStruct::Type schedule;
+
+    if (newSchedule.scheduleHandle.IsNull())
+    {
+        if (IsBuiltIn(newSchedule))
+        {
+            return CHIP_IM_GLOBAL_STATUS(ConstraintError);
+        }
+        // Force to be false, if passed as null
+        schedule.builtIn = DataModel::MakeNullable(false);
+    }
+
     // PresetStructWithOwnedMembers preset = newPreset;
     // if (!IsValidPresetEntry(preset))
     // {
@@ -145,12 +164,41 @@ CHIP_ERROR ThermostatAttrAccess::AppendPendingSchedule(Thermostat::Delegate * de
     //     return CHIP_IM_GLOBAL_STATUS(ResourceExhausted);
     // }
 
-    //return delegate->AppendToPendingPresetList(preset);
+    schedule.builtIn    = newSchedule.builtIn;
+
+    return delegate->AppendToPendingScheduleList(schedule);
 
     return CHIP_NO_ERROR;
 }
 
+
+
 Status ThermostatAttrAccess::PrecommitSchedules(EndpointId endpoint)
 {
+    ChipLogError(Zcl, "PrecommitSchedules()");
+
+    auto delegate = GetDelegate(endpoint);
+
+    if (delegate == nullptr)
+    {
+        ChipLogError(Zcl, "Delegate is null");
+        return Status::InvalidInState;
+    }
+
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    for (uint8_t i = 0; true; i++)
+    {
+        ScheduleStruct::Type schedule;
+        err = delegate->GetScheduleAtIndex(i, schedule);
+
+        if (err == CHIP_ERROR_PROVIDER_LIST_EXHAUSTED)
+        {
+            break;
+        }
+    }
+
+
+
     return Status::Success;
 }

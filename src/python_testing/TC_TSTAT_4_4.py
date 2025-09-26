@@ -42,6 +42,7 @@ from datetime import datetime, timedelta, timezone
 from mobly import asserts
 
 import matter.clusters as Clusters
+from matter import ChipDeviceCtrl  # Needed before matter.FabricAdmin
 from matter.interaction_model import InteractionModelError, Status
 from matter.testing.matter_testing import MatterBaseTest, TestStep, async_test_body, default_matter_test_main
 
@@ -50,6 +51,18 @@ logger = logging.getLogger(__name__)
 cluster = Clusters.Thermostat
 
 class TC_TSTAT_4_4(MatterBaseTest):
+
+    async def write_schedules(self,
+                              endpoint,
+                              schedules,
+                              dev_ctrl: ChipDeviceCtrl = None,
+                              expected_status: Status = Status.Success) -> Status:
+        if dev_ctrl is None:
+            dev_ctrl = self.default_controller
+        result = await dev_ctrl.WriteAttribute(self.dut_node_id, [(endpoint, cluster.Attributes.Schedules(schedules))])
+        status = result[0].Status
+        asserts.assert_equal(status, expected_status, f"Schedules write returned {status.name}; expected {expected_status.name}")
+        return status
 
     def desc_TC_TSTAT_4_4(self) -> str:
         """Returns a description of this test"""
@@ -63,7 +76,9 @@ class TC_TSTAT_4_4(MatterBaseTest):
         steps = [
             TestStep("1", "Commissioning, already done",
                      is_commissioning=True),
-            TestStep("2", "TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.",
+            TestStep("2", "TH writes to the Schedules attribute without calling the AtomicRequest command",
+                     "Verify that the write request returns INVALID_IN_STATE error since the client didn't send a request to edit the schedules by calling AtomicRequest command."),                     
+            TestStep("3", "TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.",
                      "Verify that the read returned a list of schedule types with count >=2."),
         ]
 
@@ -71,7 +86,8 @@ class TC_TSTAT_4_4(MatterBaseTest):
 
     @ async_test_body
     async def test_TC_TSTAT_4_4(self):
-        endpoint = self.get_endpoint()
+        # TODO Why is the endpoint 0?
+        endpoint = 1 # self.get_endpoint()
 
         logger.info(f"Endpoint: {endpoint}")
 
@@ -79,6 +95,21 @@ class TC_TSTAT_4_4(MatterBaseTest):
         # Commission DUT - already done
 
         self.step("2")
+        #if self.pics_guard(self.check_pics("TSTAT.S.F07")):
+        # Read the numberOfPresets supported.
+        numberOfSchedulesSupported = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.NumberOfSchedules)
+
+        # Read the ScheduleTypes to get the schedule scenarios supported by the Thermostat.
+        scheduleTypes = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
+        logger.info(f"Rx'd Schedule Types: {scheduleTypes}")
+
+        current_schedules = await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=cluster.Attributes.Schedules)
+        logger.info(f"Rx'd Schedules: {current_schedules}")
+
+        # Write to the presets attribute without calling AtomicRequest command
+        await self.write_schedules(endpoint=endpoint, schedules=current_schedules, expected_status=Status.InvalidInState)
+
+        self.step("3")
         #if self.pics_guard(self.check_pics("TSTAT.S.F0a")):
             # TH reads the ScheduleTypes attribute and saves it in a SupportedScheduleTypes variable.
         supported_schedule_types = await self.read_single_attribute_check_success(endpoint=1, cluster=cluster, attribute=cluster.Attributes.ScheduleTypes)
