@@ -520,7 +520,7 @@ void ThermostatAttrAccess::CommitAtomicWrite(CommandHandler * commandObj, const 
             statusCode = PrecommitPresets(endpoint);
             break;
         case Schedules::Id:
-            statusCode = Status::Success;
+            statusCode = PrecommitSchedules(endpoint);
             break;
         default:
             commandObj->AddStatus(commandPath, Status::InvalidInState);
@@ -550,6 +550,12 @@ void ThermostatAttrAccess::CommitAtomicWrite(CommandHandler * commandObj, const 
                 }
                 break;
             case Schedules::Id:
+                err = delegate->CommitPendingSchedules();
+                if (err != CHIP_NO_ERROR)
+                {
+                    statusCode = Status::InvalidInState;
+                }
+                break;
                 break;
             default:
                 // Not reachable, since we returned in this situation above.

@@ -256,6 +256,15 @@ public:
      */
     virtual CHIP_ERROR GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & scheduleType) = 0;
 
+    /**
+     * @brief Clears the pending schedules list.
+     *
+     */
+    virtual void ClearPendingScheduleList() = 0;
+
+
+    virtual CHIP_ERROR CommitPendingSchedules() = 0;
+
 
 
 

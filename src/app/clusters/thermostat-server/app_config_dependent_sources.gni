@@ -18,6 +18,7 @@ app_config_dependent_sources = [
   "thermostat-server-atomic.cpp",
   "thermostat-server-presets.cpp",
   "thermostat-server-presets.h",
+  "thermostat-server-schedules.cpp",
   "thermostat-server-suggestions.cpp",
   "thermostat-server.cpp",
   "thermostat-server.h",

@@ -98,6 +98,10 @@ public:
 
     CHIP_ERROR GetScheduleAtIndex(size_t index, Structs::ScheduleStruct::Type & scheduleType) override;
 
+    void ClearPendingScheduleList() override;
+
+    CHIP_ERROR CommitPendingSchedules() override;
+
 private:
     static ThermostatDelegate sInstance;
 

@@ -84,6 +84,18 @@ private:
     Protocols::InteractionModel::Status PrecommitPresets(EndpointId endpoint);
 
     /**
+     * @brief Apply a schedule to the pending lists of schedules during an atomic write
+     *
+     * @param delegate The current ThermostatDelegate
+     * @param preset The schedule to append
+     * @return CHIP_NO_ERROR if successful, an error code if not
+     */
+    CHIP_ERROR AppendPendingSchedule(Thermostat::Delegate * delegate, const Structs::ScheduleStruct::DecodableType & schedule);
+
+    Protocols::InteractionModel::Status PrecommitSchedules(EndpointId endpoint);
+    
+
+    /**
      * @brief Callback for when the server is removed from a given fabric; all associated atomic writes are reset
      *
      * @param fabricTable The fabric table

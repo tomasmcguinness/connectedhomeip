@@ -523,3 +523,13 @@ CHIP_ERROR ThermostatDelegate::GetScheduleAtIndex(size_t index, Structs::Schedul
     }
     return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
 }
+
+void ThermostatDelegate::ClearPendingScheduleList()
+{
+
+}
+
+CHIP_ERROR ThermostatDelegate::CommitPendingSchedules()
+{
+    return CHIP_NO_ERROR;
+}
